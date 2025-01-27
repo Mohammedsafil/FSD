@@ -1,0 +1,33 @@
+/* body{
+    margin: 0;
+    padding: 0;
+    font-family: 'Roboto', sans-serif;
+    background-color: #f5f5f5;
+}
+
+.header{
+    margin: 10px 20px;
+    display: flex;
+    justify-content: space-between; 
+    background-color: black;
+    color: whitesmoke;
+    border-radius: 20px;
+}
+
+.header nav ul{
+    display: flex;
+}
+
+.header nav ul li{
+    display: flex;
+    justify-content: space-evenly;
+    margin-right: 30px;
+    color: gray;
+}
+
+.header nav ul li a{
+    display: flex;
+    justify-content: space-evenly;
+    margin-right: 30px;
+    color: gray;
+} */
