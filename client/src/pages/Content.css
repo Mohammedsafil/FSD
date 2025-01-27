@@ -3,28 +3,13 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    margin-top: 20px; 
+}
+.body a{
+    text-decoration: none;
 }
 
 .body button{
-    width: 200px;
-    height: 50px;
-    background-color: black;
-    color: white;
-    font-size: 20px;
-    border-radius: 20px;
-}
-
-.body button:hover{
-    background-color: white;
-    color: black;
-    cursor: pointer;
-    transition: 1s;
-}
-
-.body button:hover{
-    color: black;
-}
-
-.body button a{
-    text-decoration: none;
+    margin-top: 10px;
+    width: 100px;
 }

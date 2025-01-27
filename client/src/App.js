@@ -4,6 +4,7 @@ import IndexPage from './pages/IndexPage';
 import {BrowserRouter as Router, Routes, Route, Link} from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Registration from './pages/Registration';
+import Login from './pages/Login';
 const App = () => {
   return (
     <div>
@@ -15,6 +16,7 @@ const App = () => {
         <Routes>
         <Route path='/' element={<IndexPage />} />
         <Route path='/register' element={<Registration />} />
+        <Route path='/login' element={<Login />} />
         </Routes>
       </Router>
     </div>
