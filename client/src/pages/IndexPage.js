@@ -1,11 +1,12 @@
 import React from 'react';
 import Header from '../Header';
 import Post from '../Post';
-
+import Content from './Content';
 const indexPage = () => {
   return (
-    <div>
+    <div className='indexPage'>
       <Header />
+      <Content />
       <Post />
     </div>
   )
