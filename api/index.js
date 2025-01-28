@@ -65,3 +65,21 @@ App.post('/register', async(req,res) => {
     }
 
 })
+
+App.post('/login', async(req,res) => {
+    const {username,password} = req.body;
+    try{
+        const user = await User.findOne({username});
+        if(!user){
+            return res.status(400).json({message:"User Not Found"});
+        }
+        const isValidPassword = await bcrypt.compare(password,user.password);
+        if(!isValidPassword){
+            return res.status(400).json({message:"Invalid Password"});
+        }
+        res.status(200).json({message:"User Logined"});
+    }
+    catch(err){
+        res.status(500).json({message:"Login Error"});
+    }
+})
