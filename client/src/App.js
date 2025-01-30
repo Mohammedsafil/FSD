@@ -1,26 +1,35 @@
-import React from 'react'
+import React from 'react';
 import './App.css'
+import {BrowserRouter as Router, Routes, Route, Navigate} from 'react-router-dom';
+// import 'bootstrap/dist/css/bootstrap.min.css';
 import IndexPage from './pages/IndexPage';
-import {BrowserRouter as Router, Routes, Route} from 'react-router-dom';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import Registration from './pages/Registration';
-import Login from './pages/Login';
+import HomePage from './pages/HomePage';
+import CreatePost from './pages/createpost';
+import EditPost from './pages/EditPost';
+import Categories from './pages/Categories';
+import PostView from './pages/PostView';
+import Contact from './pages/Contact';
+import About from './pages/About';
+import SearchResults from './pages/SearchResults';
+
 const App = () => {
   return (
     <div>
-      {/* <div>
-        <Link to='/register'><button>Register</button></Link> 
-        
-      </div> */}
       <Router>
         <Routes>
-        <Route path='/' element={<IndexPage />} />
-        <Route path='/register' element={<Registration />} />
-        <Route path='/login' element={<Login />} />
+          <Route path='/' element={<IndexPage />} />
+          <Route path='/home' element={<HomePage />} />
+          <Route path="/create" element={<CreatePost />} />
+          <Route path="/edit/:id" element={<EditPost />} />
+          <Route path="/categories" element={<Categories />} />
+          <Route path="/post/:id" element={<PostView />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/search" element={<SearchResults />} />
         </Routes>
       </Router>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
