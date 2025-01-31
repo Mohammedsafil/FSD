@@ -10,6 +10,48 @@
     margin-top: 2rem;
 }
 
+.search-bar {
+    margin-bottom: 2rem;
+}
+
+.search-bar form {
+    display: flex;
+    gap: 1rem;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.search-bar input {
+    flex: 1;
+    padding: 0.8rem 1rem;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.search-bar input:focus {
+    outline: none;
+    border-color: #4CAF50;
+    box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.1);
+}
+
+.search-bar button {
+    padding: 0.8rem 1.5rem;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.search-bar button:hover {
+    background-color: #45a049;
+    transform: translateY(-2px);
+}
+
 .categories-list {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -55,11 +97,11 @@
     font-size: 0.9rem;
 }
 
-.category-posts {
+.posts-section {
     margin-top: 2rem;
 }
 
-.category-posts h2 {
+.posts-section h2 {
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -155,6 +197,14 @@
 @media (max-width: 768px) {
     .categories-content {
         padding: 1rem;
+    }
+
+    .search-bar form {
+        flex-direction: column;
+    }
+
+    .search-bar button {
+        width: 100%;
     }
 
     .categories-list {

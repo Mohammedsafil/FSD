@@ -57,6 +57,38 @@
     margin-bottom: 0.25rem;
 }
 
+.author-name-follow {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.follow-button {
+    padding: 0.5rem 1rem;
+    border: 1px solid #007bff;
+    border-radius: 20px;
+    background-color: white;
+    color: #007bff;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+}
+
+.follow-button:hover {
+    background-color: #007bff;
+    color: white;
+}
+
+.follow-button.following {
+    background-color: #007bff;
+    color: white;
+}
+
+.follow-button.following:hover {
+    background-color: #dc3545;
+    border-color: #dc3545;
+}
+
 .post-date {
     display: block;
     color: #666;
@@ -336,6 +368,141 @@
 
 .comment-item:first-child {
     animation: slideIn 0.3s ease-out;
+}
+
+.popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.popup-content {
+    background-color: white;
+    padding: 2rem;
+    border-radius: 10px;
+    position: relative;
+    max-width: 400px;
+    width: 90%;
+    text-align: center;
+}
+
+.close-popup {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #666;
+}
+
+.close-popup:hover {
+    color: #333;
+}
+
+.gpay-container {
+    margin: 1.5rem auto;
+    max-width: 300px;
+}
+
+.gpay-qr {
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.subscribe-button {
+    padding: 0.5rem 1rem;
+    border: 1px solid #ffd700;
+    border-radius: 20px;
+    background-color: white;
+    color: #ffd700;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+    margin-left: 1rem;
+}
+
+.subscribe-button:hover {
+    background-color: #ffd700;
+    color: white;
+}
+
+/* Star Rating Styles */
+.rating-section {
+    margin: 20px 0;
+    text-align: center;
+    padding: 20px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.rating-section h4 {
+    margin-bottom: 15px;
+    color: #333;
+    font-size: 1.2em;
+}
+
+.star-rating {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.stars-container {
+    display: inline-flex;
+    gap: 8px;
+}
+
+.star {
+    font-size: 28px;
+    cursor: pointer;
+    color: #ddd;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+
+.star.active {
+    color: #ffd700;
+}
+
+.star:hover {
+    transform: scale(1.1);
+    color: #ffd700;
+}
+
+.rating-stats {
+    margin-top: 10px;
+    font-size: 0.9em;
+    color: #666;
+}
+
+.average-rating {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    background-color: #fff;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.rating-message {
+    margin-top: 10px;
+    color: #28a745;
+    font-size: 0.9em;
+    font-weight: 500;
 }
 
 /* Responsive Design */

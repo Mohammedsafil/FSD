@@ -65,7 +65,7 @@ const Header = ({ onWriteClick }) => {
                 href="/about" 
                 className={`nav-link ${currentPath === '/about' ? 'active' : ''}`}
               >
-                About
+                Profile
               </a>
             </li>
             <li className="nav-item">

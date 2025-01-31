@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 import './createpoststyle.css';
 
 const EditPost = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const [formData, setFormData] = useState({
         title: '',
         content: '',
@@ -14,25 +18,60 @@ const EditPost = () => {
     });
     const [message, setMessage] = useState('');
 
-    useEffect(() => {
-        // Fetch the post data when component mounts
-        const fetchPost = async () => {
-            try {
-                const response = await fetch(`http://localhost:4000/api/posts/${id}`);
-                if (response.ok) {
-                    const data = await response.json();
-                    setFormData(data.post);
-                } else {
-                    setMessage('Failed to fetch post data');
-                }
-            } catch (error) {
-                console.error('Error fetching post:', error);
-                setMessage('Error fetching post data');
-            }
-        };
+    const modules = {
+        toolbar: [
+            [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+            ['bold', 'italic', 'underline', 'strike'],
+            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+            [{ 'script': 'sub'}, { 'script': 'super' }],
+            [{ 'indent': '-1'}, { 'indent': '+1' }],
+            [{ 'direction': 'rtl' }],
+            [{ 'color': [] }, { 'background': [] }],
+            ['link', 'image', 'video'],
+            ['blockquote', 'code-block'],
+            ['clean']
+        ],
+    };
 
+    const formats = [
+        'header',
+        'bold', 'italic', 'underline', 'strike',
+        'list', 'bullet',
+        'script',
+        'indent',
+        'direction',
+        'color', 'background',
+        'link', 'image', 'video',
+        'blockquote', 'code-block'
+    ];
+
+    useEffect(() => {
         fetchPost();
     }, [id]);
+
+    const fetchPost = async () => {
+        try {
+            setLoading(true);
+            const response = await fetch(`http://localhost:4000/api/posts/${id}`);
+            const data = await response.json();
+            
+            if (response.ok) {
+                // Check if we have the post data
+                if (data.title) {
+                    setFormData(data);
+                } else {
+                    setError('Post data is incomplete');
+                }
+            } else {
+                setError(data.message || 'Failed to fetch post data');
+            }
+        } catch (error) {
+            console.error('Error fetching post:', error);
+            setError('Error fetching post data');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -44,6 +83,8 @@ const EditPost = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setMessage('');
+        
         try {
             const response = await fetch(`http://localhost:4000/api/posts/${id}`, {
                 method: 'PUT',
@@ -57,6 +98,7 @@ const EditPost = () => {
 
             if (response.ok) {
                 setMessage('Post updated successfully!');
+                // Navigate after a short delay
                 setTimeout(() => navigate('/home'), 1500);
             } else {
                 setMessage(data.message || 'Failed to update post');
@@ -71,14 +113,19 @@ const EditPost = () => {
         if (window.confirm('Are you sure you want to delete this post?')) {
             try {
                 const response = await fetch(`http://localhost:4000/api/posts/${id}`, {
-                    method: 'DELETE'
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
                 });
+
+                const data = await response.json();
 
                 if (response.ok) {
                     setMessage('Post deleted successfully!');
+                    // Navigate after a short delay
                     setTimeout(() => navigate('/home'), 1500);
                 } else {
-                    const data = await response.json();
                     setMessage(data.message || 'Failed to delete post');
                 }
             } catch (error) {
@@ -88,10 +135,27 @@ const EditPost = () => {
         }
     };
 
+    if (loading) {
+        return <div className="create-post-container">Loading...</div>;
+    }
+
+    if (error) {
+        return (
+            <div className="create-post-container">
+                <div className="message error">{error}</div>
+                <button onClick={() => navigate('/home')} className="back-button">
+                    Back to Home
+                </button>
+            </div>
+        );
+    }
+
     return (
         <div className="create-post-container">
             <h2>Edit Post</h2>
-            {message && <div className="message">{message}</div>}
+            {message && <div className={`message ${message.includes('successfully') ? 'success' : 'error'}`}>
+                {message}
+            </div>}
             
             <form onSubmit={handleSubmit} className="post-form">
                 <div className="form-group">
@@ -107,11 +171,13 @@ const EditPost = () => {
 
                 <div className="form-group">
                     <label>Content:</label>
-                    <textarea
-                        name="content"
+                    <ReactQuill
+                        theme="snow"
                         value={formData.content}
-                        onChange={handleInputChange}
-                        required
+                        onChange={(content) => setFormData(prev => ({ ...prev, content }))}
+                        modules={modules}
+                        formats={formats}
+                        placeholder="Write your post content here..."
                     />
                 </div>
 
@@ -133,6 +199,7 @@ const EditPost = () => {
                         name="coverImage"
                         value={formData.coverImage}
                         onChange={handleInputChange}
+                        required
                     />
                 </div>
 
@@ -149,7 +216,11 @@ const EditPost = () => {
 
                 <div className="button-group">
                     <button type="submit" className="submit-button">Update Post</button>
-                    <button type="button" className="cancel-button" onClick={handleDelete}>
+                    <button 
+                        type="button" 
+                        onClick={handleDelete} 
+                        className="cancel-button"
+                    >
                         Delete Post
                     </button>
                 </div>

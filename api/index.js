@@ -18,6 +18,63 @@ App.use(cors());
 App.use(express.json({ limit: '50mb' }));
 App.use(express.urlencoded({ limit: '50mb', extended: true }));
 
+// Connect to MongoDB
+mongoose.connect(url, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+})
+.then(async () => {
+    console.log("Connected to MongoDB");
+    
+    // Check if we have any posts
+    const count = await BlogPost.countDocuments();
+    console.log(`Current post count: ${count}`);
+    
+    // Add some test data if no posts exist
+    if (count === 0) {
+        try {
+            const testPosts = [
+                {
+                    title: "Getting Started with React",
+                    content: "React is a popular JavaScript library for building user interfaces...",
+                    category: "Technology",
+                    author: "Mohammed Safil",
+                    coverImage: "https://example.com/react.jpg"
+                },
+                {
+                    title: "Healthy Living Tips",
+                    content: "Maintaining a healthy lifestyle is crucial for overall wellbeing...",
+                    category: "Health",
+                    author: "Mohammed Safil",
+                    coverImage: "https://example.com/health.jpg"
+                },
+                {
+                    title: "Travel Adventures",
+                    content: "Exploring new places and experiencing different cultures...",
+                    category: "Travel",
+                    author: "Mohammed Safil",
+                    coverImage: "https://example.com/travel.jpg"
+                }
+            ];
+            
+            await BlogPost.insertMany(testPosts);
+            console.log("Test posts added successfully");
+        } catch (error) {
+            console.error("Error adding test posts:", error);
+        }
+    }
+})
+.catch(err => console.error("Failed to connect to MongoDB:", err));
+
+// Add error handler for MongoDB connection
+mongoose.connection.on('error', err => {
+    console.error('MongoDB connection error:', err);
+});
+
+mongoose.connection.on('disconnected', () => {
+    console.log('MongoDB disconnected');
+});
+
 // Session setup
 App.use(session({
     secret: 'your_secret_key',
@@ -27,11 +84,6 @@ App.use(session({
 
 App.use(passport.initialize());
 App.use(passport.session());
-
-// Connect to MongoDB
-// mongoose.connect(url)
-//     .then(() => console.log("Connected to MongoDB"))
-//     .catch(err => console.log("Failed to connect", err));
 
 // Define the User schema
 const UserSchema = new mongoose.Schema({
@@ -233,21 +285,26 @@ App.post('/login', async (req, res) => {
     }
 });
 
-// Blog post schema
-const blogPostSchema = new mongoose.Schema({
-    title: String,
-    content: String,
-    author: String,
-    category: String,
-    coverImage: String,
-    likes: { type: Number, default: 0 },
-    dislikes: { type: Number, default: 0 },
-    likedBy: [String],  // Array of user IDs who liked
-    dislikedBy: [String], // Array of user IDs who disliked
-    createdAt: { type: Date, default: Date.now }
+// Define the BlogPost schema
+const BlogPostSchema = new mongoose.Schema({
+    title: { type: String, required: true },
+    content: { type: String, required: true },
+    category: { type: String, required: true },
+    coverImage: { type: String },
+    author: { type: String, required: true },
+    createdAt: { type: Date, default: Date.now },
+    likes: [{ type: String }],  // Array of user IDs who liked the post
+    ratings: [{
+        userId: { type: String },
+        rating: { type: Number, min: 1, max: 5 }
+    }],
+    averageRating: { type: Number, default: 0 }
 });
 
-const BlogPost = mongoose.model('BlogPost', blogPostSchema);
+// Add text indexes for search
+BlogPostSchema.index({ title: 'text', content: 'text', category: 'text' });
+
+const BlogPost = mongoose.model('BlogPost', BlogPostSchema);
 
 // Create blog post
 App.post('/api/posts', async (req, res) => {
@@ -323,7 +380,7 @@ App.get('/api/posts/:id', async (req, res) => {
         const userId = req.query.userId;
         const response = post.toObject();
         if (userId) {
-            response.hasLiked = post.likedBy.includes(userId);
+            response.hasLiked = post.likes.includes(userId);
             response.hasDisliked = post.dislikedBy.includes(userId);
         }
         
@@ -408,13 +465,13 @@ App.post('/api/posts/:id/like', async (req, res) => {
         }
 
         // Check if user already liked or disliked
-        const alreadyLiked = post.likedBy.includes(userId);
+        const alreadyLiked = post.likes.includes(userId);
         const alreadyDisliked = post.dislikedBy.includes(userId);
 
         if (alreadyLiked) {
             // Remove like
             post.likes = Math.max(0, post.likes - 1);
-            post.likedBy = post.likedBy.filter(id => id !== userId);
+            post.likes = post.likes.filter(id => id !== userId);
         } else {
             // Add like and remove dislike if exists
             if (alreadyDisliked) {
@@ -422,14 +479,14 @@ App.post('/api/posts/:id/like', async (req, res) => {
                 post.dislikedBy = post.dislikedBy.filter(id => id !== userId);
             }
             post.likes += 1;
-            post.likedBy.push(userId);
+            post.likes.push(userId);
         }
 
         await post.save();
         res.json({ 
             likes: post.likes, 
             dislikes: post.dislikes,
-            hasLiked: post.likedBy.includes(userId),
+            hasLiked: post.likes.includes(userId),
             hasDisliked: post.dislikedBy.includes(userId)
         });
     } catch (error) {
@@ -451,7 +508,7 @@ App.post('/api/posts/:id/dislike', async (req, res) => {
         }
 
         // Check if user already liked or disliked
-        const alreadyLiked = post.likedBy.includes(userId);
+        const alreadyLiked = post.likes.includes(userId);
         const alreadyDisliked = post.dislikedBy.includes(userId);
 
         if (alreadyDisliked) {
@@ -462,7 +519,7 @@ App.post('/api/posts/:id/dislike', async (req, res) => {
             // Add dislike and remove like if exists
             if (alreadyLiked) {
                 post.likes = Math.max(0, post.likes - 1);
-                post.likedBy = post.likedBy.filter(id => id !== userId);
+                post.likes = post.likes.filter(id => id !== userId);
             }
             post.dislikes += 1;
             post.dislikedBy.push(userId);
@@ -472,7 +529,7 @@ App.post('/api/posts/:id/dislike', async (req, res) => {
         res.json({ 
             likes: post.likes, 
             dislikes: post.dislikes,
-            hasLiked: post.likedBy.includes(userId),
+            hasLiked: post.likes.includes(userId),
             hasDisliked: post.dislikedBy.includes(userId)
         });
     } catch (error) {
@@ -480,35 +537,87 @@ App.post('/api/posts/:id/dislike', async (req, res) => {
     }
 });
 
-// Search posts by title, content, category, or author
-App.get('/api/posts/search', async (req, res) => {
+// Rating endpoint
+App.post('/api/posts/:id/rate', async (req, res) => {
     try {
-        const searchQuery = req.query.q;
-        if (!searchQuery) {
-            return res.json([]);
+        const postId = req.params.id;
+        const { rating } = req.body;
+        
+        // Validate rating
+        if (!rating || rating < 1 || rating > 5) {
+            return res.status(400).json({ message: 'Invalid rating. Must be between 1 and 5.' });
         }
 
-        // Create a search pattern that matches words partially
-        const searchPattern = searchQuery.split(' ')
-            .filter(word => word.length > 0)
-            .map(word => `(?=.*${word})`)
-            .join('');
-        
-        const regex = new RegExp(searchPattern, 'i');
+        // Get the post
+        const post = await BlogPost.findById(postId);
+        if (!post) {
+            return res.status(404).json({ message: 'Post not found' });
+        }
 
-        const posts = await BlogPost.find({
-            $or: [
-                { title: { $regex: regex } },
-                { content: { $regex: regex } },
-                { category: { $regex: regex } },
-                { author: { $regex: regex } }
-            ]
-        }).sort({ createdAt: -1 });
-        
-        res.json(posts);
+        // Add or update rating
+        const userId = 'anonymous'; // You can replace this with actual user ID when you have authentication
+        const existingRatingIndex = post.ratings.findIndex(r => r.userId === userId);
+
+        if (existingRatingIndex > -1) {
+            post.ratings[existingRatingIndex].rating = rating;
+        } else {
+            post.ratings.push({ userId, rating });
+        }
+
+        // Calculate new average rating
+        const totalRatings = post.ratings.reduce((sum, r) => sum + r.rating, 0);
+        post.averageRating = totalRatings / post.ratings.length;
+
+        // Save the updated post
+        await post.save();
+
+        res.json({ 
+            success: true, 
+            averageRating: post.averageRating,
+            totalRatings: post.ratings.length
+        });
+    } catch (error) {
+        console.error('Error rating post:', error);
+        res.status(500).json({ message: 'Error rating post' });
+    }
+});
+
+// Search endpoint
+App.get('/api/posts/search', async (req, res) => {
+    try {
+        const { q } = req.query;
+        if (!q) {
+            return res.status(400).json({ message: 'Search query is required' });
+        }
+
+        // Debug log
+        console.log('Search query:', q);
+
+        // First, check if there are any posts at all
+        const totalPosts = await BlogPost.countDocuments();
+        console.log('Total posts in database:', totalPosts);
+
+        const searchResults = await BlogPost.find(
+            {
+                $or: [
+                    { title: { $regex: q, $options: 'i' } },
+                    { content: { $regex: q, $options: 'i' } },
+                    { category: { $regex: q, $options: 'i' } },
+                    { author: { $regex: q, $options: 'i' } }
+                ]
+            },
+            null,
+            { sort: { createdAt: -1 } }
+        );
+
+        // Debug log
+        console.log('Search results count:', searchResults.length);
+        console.log('First result (if any):', searchResults[0]);
+
+        res.json(searchResults);
     } catch (error) {
         console.error('Search error:', error);
-        res.status(500).json({ error: 'Error searching posts' });
+        res.status(500).json({ message: 'Error performing search', error: error.message });
     }
 });
 

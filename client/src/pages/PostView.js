@@ -1,6 +1,36 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import './PostView.css';
+import gpayQR from '../asserts/gpay.jpg';
+
+const StarRating = ({ rating, averageRating, totalRatings, onRatingChange }) => {
+    const [hover, setHover] = useState(0);
+    
+    return (
+        <div className="star-rating">
+            <div className="stars-container">
+                {[1, 2, 3, 4, 5].map(star => (
+                    <span
+                        key={star}
+                        className={`star ${star <= (hover || rating) ? 'active' : ''}`}
+                        onClick={() => onRatingChange(star)}
+                        onMouseEnter={() => setHover(star)}
+                        onMouseLeave={() => setHover(0)}
+                    >
+                        ★
+                    </span>
+                ))}
+            </div>
+            <div className="rating-stats">
+                {averageRating > 0 && (
+                    <span className="average-rating">
+                        Average: {averageRating.toFixed(1)} ★ ({totalRatings} {totalRatings === 1 ? 'rating' : 'ratings'})
+                    </span>
+                )}
+            </div>
+        </div>
+    );
+};
 
 const PostView = () => {
     const [post, setPost] = useState(null);
@@ -8,6 +38,10 @@ const PostView = () => {
     const [hasDisliked, setHasDisliked] = useState(false);
     const [comment, setComment] = useState('');
     const [comments, setComments] = useState([]);
+    const [isFollowing, setIsFollowing] = useState(false);
+    const [showSubscribePopup, setShowSubscribePopup] = useState(false);
+    const [userRating, setUserRating] = useState(0);
+    const [hasRated, setHasRated] = useState(false);
     const { id } = useParams();
     const navigate = useNavigate();
 
@@ -41,6 +75,23 @@ const PostView = () => {
         setHasDisliked(!hasDisliked);
     };
 
+    const handleFollow = async () => {
+        try {
+            // TODO: Implement actual API call to follow/unfollow user
+            setIsFollowing(!isFollowing);
+        } catch (error) {
+            console.error('Error following user:', error);
+        }
+    };
+
+    const handleSubscribe = () => {
+        setShowSubscribePopup(true);
+    };
+
+    const closeSubscribePopup = () => {
+        setShowSubscribePopup(false);
+    };
+
     const handleCommentSubmit = (e) => {
         e.preventDefault();
         if (comment.trim()) {
@@ -52,6 +103,34 @@ const PostView = () => {
             };
             setComments([newComment, ...comments]);
             setComment('');
+        }
+    };
+
+    const handleRating = async (value) => {
+        try {
+            const response = await fetch(`http://localhost:4000/api/posts/${id}/rate`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ rating: value })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                setUserRating(value);
+                setHasRated(true);
+                // Update the post with new rating data
+                setPost(prev => ({
+                    ...prev,
+                    averageRating: data.averageRating,
+                    totalRatings: data.totalRatings
+                }));
+            } else {
+                console.error('Failed to submit rating');
+            }
+        } catch (error) {
+            console.error('Error submitting rating:', error);
         }
     };
 
@@ -91,7 +170,15 @@ const PostView = () => {
                             {post.author.charAt(0).toUpperCase()}
                         </div>
                         <div className="author-details">
-                            <span className="author-name">Written by {post.author}</span>
+                            <div className="author-name-follow">
+                                <span className="author-name">Written by {post.author}</span>
+                                <button 
+                                    className={`follow-button ${isFollowing ? 'following' : ''}`}
+                                    onClick={handleFollow}
+                                >
+                                    {isFollowing ? 'Following' : 'Follow'}
+                                </button>
+                            </div>
                             <span className="post-date">
                                 {new Date(post.createdAt).toLocaleDateString('en-US', {
                                     year: 'numeric',
@@ -117,6 +204,8 @@ const PostView = () => {
                 </article>
 
                 <div className="post-interactions">
+                    
+
                     <div className="reactions">
                         <button 
                             className={`reaction-button like-button ${hasLiked ? 'active' : ''}`}
@@ -132,6 +221,26 @@ const PostView = () => {
                         >
                             👎
                         </button>
+                        <button 
+                            className="subscribe-button"
+                            onClick={handleSubscribe}
+                            title="Subscribe for exclusive content"
+                        >
+                            ⭐ Subscribe
+                        </button>
+                    </div>
+                    
+                    <div className="rating-section">
+                        <h4>Rate this post</h4>
+                        <StarRating 
+                            rating={userRating}
+                            averageRating={post.averageRating}
+                            totalRatings={post.ratings ? post.ratings.length : 0}
+                            onRatingChange={handleRating}
+                        />
+                        {hasRated && (
+                            <p className="rating-message">Thanks for rating!</p>
+                        )}
                     </div>
 
                     <div className="comment-section">
@@ -187,6 +296,19 @@ const PostView = () => {
                     </button>
                 </div>
             </div>
+            {showSubscribePopup && (
+                <div className="popup-overlay" onClick={closeSubscribePopup}>
+                    <div className="popup-content" onClick={e => e.stopPropagation()}>
+                        <button className="close-popup" onClick={closeSubscribePopup}>&times;</button>
+                        <h2>Support the Author</h2>
+                        <p>Scan the QR code to support with GPay</p>
+                        <div className="gpay-container">
+                            <img src={gpayQR} alt="GPay QR Code" className="gpay-qr" />
+                        </div>
+                        <p>Subscribe to access exclusive content</p>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

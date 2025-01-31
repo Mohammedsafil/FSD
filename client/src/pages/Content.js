@@ -12,6 +12,11 @@ const Content = () => {
     password: ''
   });
   const [message, setMessage] = useState('');
+  const [passwordStrength, setPasswordStrength] = useState({
+    score: 0,
+    message: '',
+    color: '#ff0000'
+  });
   const navigate = useNavigate();
 
   // Safe storage function
@@ -57,6 +62,47 @@ const Content = () => {
     return () => clearInterval(textInterval);
   }, []);
 
+  const checkPasswordStrength = (password) => {
+    let score = 0;
+    let strengthMessage = '';
+    let color = '#ff0000';
+
+    // Length check
+    if (password.length >= 8) score += 1;
+    if (password.length >= 12) score += 1;
+
+    // Character type checks
+    if (/[A-Z]/.test(password)) score += 1;
+    if (/[a-z]/.test(password)) score += 1;
+    if (/[0-9]/.test(password)) score += 1;
+    if (/[^A-Za-z0-9]/.test(password)) score += 1;
+
+    // Set message and color based on score
+    switch (true) {
+      case score === 0:
+        strengthMessage = 'Very Weak';
+        color = '#ff0000';
+        break;
+      case score <= 2:
+        strengthMessage = 'Weak';
+        color = '#ff4500';
+        break;
+      case score <= 4:
+        strengthMessage = 'Medium';
+        color = '#ffa500';
+        break;
+      case score <= 5:
+        strengthMessage = 'Strong';
+        color = '#9acd32';
+        break;
+      default:
+        strengthMessage = 'Very Strong';
+        color = '#008000';
+    }
+
+    return { score, message: strengthMessage, color };
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -64,10 +110,27 @@ const Content = () => {
       [name]: value
     }));
     setMessage('');
+
+    // Check password strength when password field changes
+    if (name === 'password') {
+      setPasswordStrength(checkPasswordStrength(value));
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Password validation
+    if (formData.password.length < 8) {
+      setMessage('Password must be at least 8 characters long');
+      return;
+    }
+    
+    if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9])/.test(formData.password)) {
+      setMessage('Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character');
+      return;
+    }
+
     try {
       const endpoint = isLogin ? 'login' : 'signup';
       const requestBody = isLogin 
@@ -158,6 +221,21 @@ const Content = () => {
             value={formData.password}
             onChange={handleInputChange}
           />
+          {formData.password && (
+            <div className="password-strength-container">
+              <div 
+                className="password-strength-bar" 
+                style={{
+                  width: `${(passwordStrength.score / 6) * 100}%`,
+                  backgroundColor: passwordStrength.color,
+                  transition: 'all 0.3s ease'
+                }}
+              />
+              <p className="password-strength-text" style={{ color: passwordStrength.color }}>
+                Password Strength: {passwordStrength.message}
+              </p>
+            </div>
+          )}
           <button type="submit" className="btn-primary">
             {isLogin ? 'Log In' : 'Sign Up'}
           </button>

@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 import './createpoststyle.css';
 
 const CreatePost = ({ onCancel }) => {
@@ -20,7 +22,40 @@ const CreatePost = ({ onCancel }) => {
         'Travel',
         'Food',
         'Health',
-        'Personal'
+        'Personal',
+        'Fitness',
+        'Business',
+        'Sports',
+        'Entertainment',
+        'Fashion',
+        'Education'
+    ];
+
+    const modules = {
+        toolbar: [
+            [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+            ['bold', 'italic', 'underline', 'strike'],
+            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+            [{ 'script': 'sub'}, { 'script': 'super' }],
+            [{ 'indent': '-1'}, { 'indent': '+1' }],
+            [{ 'direction': 'rtl' }],
+            [{ 'color': [] }, { 'background': [] }],
+            ['link', 'image', 'video'],
+            ['blockquote', 'code-block'],
+            ['clean']
+        ],
+    };
+
+    const formats = [
+        'header',
+        'bold', 'italic', 'underline', 'strike',
+        'list', 'bullet',
+        'script',
+        'indent',
+        'direction',
+        'color', 'background',
+        'link', 'image', 'video',
+        'blockquote', 'code-block'
     ];
 
     const handleInputChange = (e) => {
@@ -127,6 +162,18 @@ const CreatePost = ({ onCancel }) => {
                 </div>
 
                 <div className="form-group">
+                    <label htmlFor="content">Content</label>
+                    <ReactQuill
+                        theme="snow"
+                        value={formData.content}
+                        onChange={(content) => setFormData(prev => ({ ...prev, content }))}
+                        modules={modules}
+                        formats={formats}
+                        placeholder="Write your post content here..."
+                    />
+                </div>
+
+                <div className="form-group">
                     <label htmlFor="coverImage">Cover Image</label>
                     <input
                         type="file"
@@ -141,19 +188,6 @@ const CreatePost = ({ onCancel }) => {
                             <img src={preview} alt="Preview" />
                         </div>
                     )}
-                </div>
-
-                <div className="form-group">
-                    <label htmlFor="content">Content</label>
-                    <textarea
-                        id="content"
-                        name="content"
-                        value={formData.content}
-                        onChange={handleInputChange}
-                        placeholder="Write your post content here..."
-                        required
-                        rows="10"
-                    />
                 </div>
 
                 <div className="form-actions">
